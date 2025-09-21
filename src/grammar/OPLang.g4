@@ -28,13 +28,15 @@ classDecl: CLASS ID ( EXTENDS ID )? LB member* RB;
 
 member: varDecl | methodDecl;
 
-varDecl: FINAL? type variableDeclList SEMI;
+varDecl: STATIC? FINAL? type variableDeclList SEMI;
 variableDeclList: variableDecl (COMMA variableDecl)*;
 variableDecl: ID (LBR INTLIT RBR)? (ASSIGN expr)?;
 
-methodDecl: STATIC? type? ID LP paramList? RP body;
+methodDecl: STATIC? type? ID LP paramList? RP body
+          | TILDE ID LP paramList? RP body
+          ;
 paramList: param (SEMI param)*;
-param: type ID;
+param: type AMP? ID;
 
 type: (INT | FLOAT | STRING_TYPE | BOOLEAN | VOID | ID) (LBR INTLIT RBR)? ;
 
@@ -50,8 +52,17 @@ stmt: varDecl
     ;
 
 assignStmt: lvalue ASSIGN expr;
-lvalue: ID (LBR expr RBR)?;
-methodCall: (ID DOT ID LP exprList? RP) | (ID LP exprList? RP);
+
+lvalue: ID (LBR expr RBR)?
+      | ID DOT ID (LBR expr RBR)?
+      | THIS DOT ID
+      | THIS LBR expr RBR
+      ;
+methodCall: ID DOT ID LP exprList? RP
+          | ID LP exprList? RP
+          | THIS DOT ID LP exprList? RP
+          | THIS LP exprList? RP
+          ;
 exprStmt: expr;
 exprList: expr (COMMA expr)*;
 
@@ -62,11 +73,11 @@ expr: expr (AND|OR) expr                #logicalExpr
     | expr CONCAT expr                  #concatExpr
     | NOT expr                          #notExpr
     | LP expr RP                        #parenExpr
-    | atom                              #atomExpr
+    | postfixExpr                        #atomExpr
     ;
 
-ifStmt: IF LP expr RP THEN body (ELSE body)?;
-forStmt: FOR ID ASSIGN expr (TO | DOWNTO) expr DO body;
+ifStmt: IF LP expr RP THEN (body | stmt) (ELSE (body | stmt))?;
+forStmt: FOR ID ASSIGN expr (TO | DOWNTO) expr DO (body | stmt);
 returnStmt: RETURN expr?;
 
 atom: INTLIT
@@ -76,15 +87,24 @@ atom: INTLIT
     | FALSE
     | NIL
     | ID
+    | THIS
     | ID LBR expr RBR
+    | THIS LBR expr RBR
     | ID LP exprList? RP
-    | NEW ID LP RP
+    | THIS LP exprList? RP
+    | NEW ID LP exprList? RP
     | LB exprList? RB
+    ;
+
+postfixExpr
+    : atom ( (DOT ID (LP exprList? RP)? ) | (LP exprList? RP) | (LBR expr RBR) )*
     ;
 
 WS: [ \t\r\n]+ -> skip;
 LINE_COMMENT: '//' ~[\r\n]* -> skip;
 BODY_COMMENT: '/*' .*? '*/' -> skip;
+
+ANNOT: '@' [a-zA-Z_] [a-zA-Z_0-9$]* -> skip;
 
 CLASS: 'class';
 EXTENDS: 'extends';
@@ -111,6 +131,9 @@ FLOAT: 'float';
 STRING_TYPE: 'string';
 BOOLEAN: 'boolean';
 
+AMP: '&';
+TILDE: '~';
+
 PLUS: '+';
 MINUS: '-';
 MUL: '*';
@@ -129,6 +152,7 @@ NOT: '!';
 ASSIGN: ':=';
 CONCAT: '^';
 DOT: '.';
+BITOR: '|';
 LP: '(';
 RP: ')';
 LBR: '[';
@@ -139,9 +163,11 @@ COMMA: ',';
 SEMI: ';';
 COLON: ':';
 
-ID: [a-zA-Z_] [a-zA-Z_0-9]*;
+ID: [a-zA-Z_] [a-zA-Z_0-9$]*;
 INTLIT: '0' | [1-9] [0-9]*;
-FLOATLIT: ([0-9]+ ('.' [0-9]*)? | '.' [0-9]+) ([eE] [+-]? [0-9]+)?;
+FLOATLIT: ([0-9]+ ('.' [0-9]*)? | '.' [0-9]+) ([eE][+-]?[0-9]+)?;
+
+CHAR: '\'' ( ESC | ~['\\\r\n] ) '\'' { self.text = self.text[1:-1]; };
 
 fragment ESC: '\\' [btnfr"\\];
 

@@ -64,6 +64,47 @@ For lexical errors, the lexer must return the following tokens with specific lex
 
 ---
 
+## Assignment 2 - AST Generation
+
+### Required Tasks to Complete
+
+1. **Study the AST Node Structure**
+
+   - Read carefully all node classes in `src/utils/nodes.py`
+   - Understand the AST node hierarchy and their properties
+   - Master how different language constructs map to AST nodes
+
+2. **Implement the ASTGeneration Class**
+
+   - Create a class `ASTGeneration` in `src/astgen/ast_generation.py`
+   - Inherit from `OPLangVisitor` (generated from ANTLR4)
+   - Override visitor methods to construct appropriate AST nodes
+   - Handle all language constructs defined in the OPLang specification
+
+3. **Write 100 AST Generation Test Cases**
+   - Implement **100 test cases** in `tests/test_ast_gen.py`
+   - Test AST generation for all language features
+   - Verify correct node types and structure
+   - Test edge cases and complex nested structures
+
+### AST Generation Requirements
+
+The `ASTGeneration` class must:
+
+- **Inherit from OPLangVisitor**: Use the visitor pattern to traverse parse trees
+- **Return AST nodes**: Each visit method should return appropriate node objects from `nodes.py`
+- **Handle all constructs**: Support all language features defined in the grammar
+- **Maintain structure**: Preserve the logical structure and relationships between language elements
+
+### Evaluation Criteria
+
+- **AST Implementation**: Correctness and completeness of the `ASTGeneration` class
+- **Node Usage**: Proper utilization of node classes from `nodes.py`
+- **Test Coverage**: Quality and comprehensiveness of 100 AST generation test cases
+- **Structure Accuracy**: AST must correctly represent the source program structure
+
+---
+
 ## Project Structure
 
 ```
