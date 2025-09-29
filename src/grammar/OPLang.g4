@@ -76,7 +76,7 @@ expr: expr (AND|OR) expr                #logicalExpr
     | postfixExpr                        #atomExpr
     ;
 
-ifStmt: IF LP expr RP THEN (body | stmt) (ELSE (body | stmt))?;
+ifStmt: IF (LP expr RP | expr) THEN (body | stmt) (ELSE (body | stmt))?;
 forStmt: FOR ID ASSIGN expr (TO | DOWNTO) expr DO (body | stmt);
 returnStmt: RETURN expr?;
 

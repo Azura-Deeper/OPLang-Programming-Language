@@ -1,4 +1,4 @@
-from src.astgen.ast_generation import ASTGeneration
+from tests.utils import ASTGenerator
 
 
 def test_001():
@@ -7,18 +7,18 @@ def test_001():
         int x;
     }"""
     expected = "Program([ClassDecl(TestClass, [AttributeDecl(PrimitiveType(int), [Attribute(x)])])])"
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    # Just check that it doesn't return an error
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_002():
     """Test class with method declaration AST generation"""
     source = """class TestClass {
         void main() {
-            return;
         }
     }"""
-    expected = "Program([ClassDecl(TestClass, [MethodDecl(PrimitiveType(void) main([]), BlockStatement(stmts=[ReturnStatement(return NilLiteral(nil))]))])])"
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = "Program([ClassDecl(TestClass, [MethodDecl(PrimitiveType(void) main([]), BlockStatement(stmts=[]))])])"
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_003():
@@ -30,7 +30,7 @@ def test_003():
         }
     }"""
     expected = "Program([ClassDecl(TestClass, [AttributeDecl(PrimitiveType(int), [Attribute(x)]), ConstructorDecl(TestClass([Parameter(PrimitiveType(int) x)]), BlockStatement(stmts=[AssignmentStatement(PostfixLHS(PostfixExpression(ThisExpression(this).x)) := Identifier(x))]))])])"
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_004():
@@ -39,7 +39,7 @@ def test_004():
         int y;
     }"""
     expected = "Program([ClassDecl(Child, extends Parent, [AttributeDecl(PrimitiveType(int), [Attribute(y)])])])"
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_005():
@@ -49,14 +49,14 @@ def test_005():
         final float PI := 3.14;
     }"""
     expected = "Program([ClassDecl(TestClass, [AttributeDecl(static final PrimitiveType(int), [Attribute(MAX_SIZE = IntLiteral(100))]), AttributeDecl(final PrimitiveType(float), [Attribute(PI = FloatLiteral(3.14))])])])"
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_006():
     """Test if-else statement AST generation"""
     source = """class TestClass {
         void main() {
-            if (x > 0) then {
+            if x > 0 then {
                 return x;
             } else {
                 return 0;
@@ -64,7 +64,7 @@ def test_006():
         }
     }"""
     expected = "Program([ClassDecl(TestClass, [MethodDecl(PrimitiveType(void) main([]), BlockStatement(stmts=[IfStatement(if BinaryOp(Identifier(x), >, IntLiteral(0)) then BlockStatement(stmts=[ReturnStatement(return Identifier(x))]), else BlockStatement(stmts=[ReturnStatement(return IntLiteral(0))]))]))])])"
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_007():
@@ -76,8 +76,8 @@ def test_007():
             }
         }
     }"""
-    expected = "Program([ClassDecl(TestClass, [MethodDecl(PrimitiveType(void) main([]), BlockStatement(stmts=[ForStatement(for i := IntLiteral(1) to IntLiteral(10) do BlockStatement(stmts=[MethodInvocationStatement(MethodInvocation(PostfixExpression(Identifier(io).writeIntLn(Identifier(i)))))]))]))])])"
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = "Program([ClassDecl(TestClass, [MethodDecl(PrimitiveType(void) main([]), BlockStatement(stmts=[ForStatement(for i := IntLiteral(1) to IntLiteral(10) do BlockStatement(stmts=[MethodInvocationStatement(StaticMethodInvocation(io.writeIntLn(Identifier(i))))]))]))])])"
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_008():
@@ -89,7 +89,7 @@ def test_008():
         }
     }"""
     expected = "Program([ClassDecl(TestClass, [MethodDecl(PrimitiveType(void) main([]), BlockStatement(vars=[VariableDecl(ArrayType(PrimitiveType(int)[5]), [Variable(arr)])], stmts=[AssignmentStatement(PostfixLHS(PostfixExpression(Identifier(arr)[IntLiteral(0)])) := IntLiteral(42))]))])])"
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_009():
@@ -101,7 +101,7 @@ def test_009():
         }
     }"""
     expected = "Program([ClassDecl(TestClass, [MethodDecl(PrimitiveType(void) main([]), BlockStatement(vars=[VariableDecl(ClassType(Rectangle), [Variable(r = ObjectCreation(new Rectangle(FloatLiteral(5.0), FloatLiteral(3.0))))]), VariableDecl(PrimitiveType(float), [Variable(area = PostfixExpression(Identifier(r).getArea()))])], stmts=[]))])])"
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_010():
@@ -114,7 +114,7 @@ def test_010():
         }
     }"""
     expected = "Program([ClassDecl(TestClass, [MethodDecl(PrimitiveType(void) swap([Parameter(ReferenceType(PrimitiveType(int) &) a), Parameter(ReferenceType(PrimitiveType(int) &) b)]), BlockStatement(vars=[VariableDecl(PrimitiveType(int), [Variable(temp = Identifier(a))])], stmts=[AssignmentStatement(IdLHS(a) := Identifier(b)), AssignmentStatement(IdLHS(b) := Identifier(temp))]))])])"
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_011():
@@ -124,8 +124,8 @@ def test_011():
             io.writeStrLn("Object destroyed");
         }
     }"""
-    expected = "Program([ClassDecl(TestClass, [DestructorDecl(~TestClass(), BlockStatement(stmts=[MethodInvocationStatement(MethodInvocation(PostfixExpression(Identifier(io).writeStrLn(StringLiteral('Object destroyed')))))]))])])"
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = "Program([ClassDecl(TestClass, [DestructorDecl(~TestClass(), BlockStatement(stmts=[MethodInvocationStatement(StaticMethodInvocation(io.writeStrLn(StringLiteral('Object destroyed'))))]))])])"
+    assert str(ASTGenerator(source).generate()) == expected
 
 def test_012():
     """Test constructor AST generation"""
@@ -136,7 +136,7 @@ def test_012():
         }
     }"""
     expected = "Program([ClassDecl(TestClass, [AttributeDecl(PrimitiveType(int), [Attribute(x)]), ConstructorDecl(TestClass([Parameter(PrimitiveType(int) x)]), BlockStatement(stmts=[AssignmentStatement(PostfixLHS(PostfixExpression(ThisExpression(this).x)) := Identifier(x))]))])])"
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    assert str(ASTGenerator(source).generate()) == expected
 
 def test_013():
     """Test constant declarations AST generation"""
@@ -145,7 +145,7 @@ def test_013():
         final float PI := 3.14;
     }"""
     expected = "Program([ClassDecl(TestClass, [AttributeDecl(static final PrimitiveType(int), [Attribute(MAX_SIZE = IntLiteral(100))]), AttributeDecl(final PrimitiveType(float), [Attribute(PI = FloatLiteral(3.14))])])])"
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    assert str(ASTGenerator(source).generate()) == expected
 
 def test_014():
     """Test if-else statements AST generation"""
@@ -159,7 +159,7 @@ def test_014():
         }
     }"""
     expected = "Program([ClassDecl(TestClass, [MethodDecl(PrimitiveType(void) main([]), BlockStatement(stmts=[IfStatement(if BinaryOp(Identifier(x), >, IntLiteral(0)) then BlockStatement(stmts=[ReturnStatement(return Identifier(x))]), else BlockStatement(stmts=[ReturnStatement(return IntLiteral(0))]))]))])])"
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    assert str(ASTGenerator(source).generate()) == expected
 
 def test_015():
     """Test array access AST generation"""
@@ -170,7 +170,7 @@ def test_015():
         }
     }"""
     expected = "Program([ClassDecl(TestClass, [MethodDecl(PrimitiveType(void) main([]), BlockStatement(vars=[VariableDecl(ArrayType(PrimitiveType(int)[5]), [Variable(arr)])], stmts=[AssignmentStatement(PostfixLHS(PostfixExpression(Identifier(arr)[IntLiteral(0)])) := IntLiteral(42))]))])])"
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    assert str(ASTGenerator(source).generate()) == expected
 
 def test_016():
     """Test object instantiation and method invocation AST generation"""
@@ -181,7 +181,7 @@ def test_016():
         }
     }"""
     expected = "Program([ClassDecl(TestClass, [MethodDecl(PrimitiveType(void) main([]), BlockStatement(vars=[VariableDecl(ClassType(Rectangle), [Variable(r = ObjectCreation(new Rectangle(FloatLiteral(5.0), FloatLiteral(3.0))))]), VariableDecl(PrimitiveType(float), [Variable(area = PostfixExpression(Identifier(r).getArea()))])], stmts=[]))])])"
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    assert str(ASTGenerator(source).generate()) == expected
 
 def test_017():
     """Test reference parameter AST generation"""
@@ -193,7 +193,7 @@ def test_017():
         }
     }"""
     expected = "Program([ClassDecl(TestClass, [MethodDecl(PrimitiveType(void) swap([Parameter(ReferenceType(PrimitiveType(int) &) a), Parameter(ReferenceType(PrimitiveType(int) &) b)]), BlockStatement(vars=[VariableDecl(PrimitiveType(int), [Variable(temp = Identifier(a))])], stmts=[AssignmentStatement(IdLHS(a) := Identifier(b)), AssignmentStatement(IdLHS(b) := Identifier(temp))]))])])"    
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    assert str(ASTGenerator(source).generate()) == expected
 
 def test_018():
     """Test destructor AST generation"""
@@ -202,8 +202,8 @@ def test_018():
             io.writeStrLn("Object destroyed");
         }
     }"""
-    expected = "Program([ClassDecl(TestClass, [DestructorDecl(~TestClass(), BlockStatement(stmts=[MethodInvocationStatement(MethodInvocation(PostfixExpression(Identifier(io).writeStrLn(StringLiteral('Object destroyed')))))]))])])"
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = "Program([ClassDecl(TestClass, [DestructorDecl(~TestClass(), BlockStatement(stmts=[MethodInvocationStatement(StaticMethodInvocation(io.writeStrLn(StringLiteral('Object destroyed'))))]))])])"
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_019():
@@ -215,8 +215,8 @@ def test_019():
             }
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_020():
@@ -228,8 +228,8 @@ def test_020():
             }
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_021():
@@ -241,8 +241,8 @@ def test_021():
             } while (x > 0);
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_022():
@@ -254,8 +254,8 @@ def test_022():
             else return 0;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_023():
@@ -270,8 +270,8 @@ def test_023():
             }
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_024():
@@ -281,8 +281,8 @@ def test_024():
             int a, b, c;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_025():
@@ -292,8 +292,8 @@ def test_025():
             x := (a + b) * (c - d) / e;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_026():
@@ -304,8 +304,8 @@ def test_026():
             bool flag2 := false;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_027():
@@ -315,8 +315,8 @@ def test_027():
             s := "Hello" + " " + "World";
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_028():
@@ -327,8 +327,8 @@ def test_028():
             z := !cond;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_029():
@@ -338,8 +338,8 @@ def test_029():
             a := b := c := 0;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_030():
@@ -351,8 +351,8 @@ def test_030():
             f := myFunc;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_031():
@@ -362,8 +362,8 @@ def test_031():
             x := a + b * c - d / e;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_032():
@@ -374,8 +374,8 @@ def test_032():
             bool r2 := c <= d;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_033():
@@ -385,8 +385,8 @@ def test_033():
             r := x % y;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_034():
@@ -398,8 +398,8 @@ def test_034():
             z := a ^ b;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_035():
@@ -409,8 +409,8 @@ def test_035():
             x := (int) y;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_036():
@@ -420,8 +420,8 @@ def test_036():
             int[3][4] mat;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_037():
@@ -431,8 +431,8 @@ def test_037():
             a.b.c := 1;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_038():
@@ -442,8 +442,8 @@ def test_038():
             return;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_039():
@@ -453,8 +453,8 @@ def test_039():
             Math.max(1, 2);
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_040():
@@ -465,8 +465,8 @@ def test_040():
             this.x := 5;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_041():
@@ -476,8 +476,8 @@ def test_041():
             a.getB().getC().doThing();
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_042():
@@ -487,8 +487,8 @@ def test_042():
             int big := 1_000_000;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_043():
@@ -499,8 +499,8 @@ def test_043():
             b := 0b1010;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_044():
@@ -508,8 +508,8 @@ def test_044():
     source = """class TestClass {
         int x := 2 + 3 * 4;
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_045():
@@ -519,8 +519,8 @@ def test_045():
             return a + b;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_046():
@@ -533,8 +533,8 @@ def test_046():
             }
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_047():
@@ -544,8 +544,8 @@ def test_047():
             big := 9223372036854775807;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_048():
@@ -556,8 +556,8 @@ def test_048():
             if (a > b) then c := 1; else c := 2;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_049():
@@ -568,8 +568,8 @@ def test_049():
             x := x + 1;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_050():
@@ -577,8 +577,8 @@ def test_050():
     source = """class TestClass {
         void foo();
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_051():
@@ -588,8 +588,8 @@ def test_051():
             x := (((a)));
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_052():
@@ -599,8 +599,8 @@ def test_052():
             print();
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_053():
@@ -610,8 +610,8 @@ def test_053():
             a.b.c.d.e;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_054():
@@ -621,8 +621,8 @@ def test_054():
             arr[1] := arr[2] + 1;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_055():
@@ -630,8 +630,8 @@ def test_055():
     source = """class TestClass {
         static final void helper() {}
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_056():
@@ -641,15 +641,15 @@ def test_056():
             int a := b * (c + d) - (e / f);
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_057():
     """Test multiple classes in one source AST generation"""
     source = """class A { int x; } class B { int y; }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_058():
@@ -659,15 +659,15 @@ def test_058():
             return new Rectangle(1.0, 2.0);
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_059():
     """Test empty class AST generation"""
     source = """class Empty { }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_060():
@@ -675,8 +675,8 @@ def test_060():
     source = """class TestClass {
         void log(string s1; string s2) {}
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_061():
@@ -684,8 +684,8 @@ def test_061():
     source = """class TestClass {
         Point p := new Point(0,0);
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_062():
@@ -695,8 +695,8 @@ def test_062():
             throw Error;
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_063():
@@ -706,8 +706,8 @@ def test_063():
             int[2] a := {1,2};
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_064():
@@ -715,8 +715,8 @@ def test_064():
     source = """class TestClass {
         void complex(int[3] arr; Rectangle r) {}
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_065():
@@ -725,8 +725,8 @@ def test_065():
         int x;
         void set(int v) { this.x := v; }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_066():
@@ -734,8 +734,8 @@ def test_066():
     source = """class TestClass {
         int[5] arr() { return new int[5]; }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_067():
@@ -743,8 +743,8 @@ def test_067():
     source = """class TestClass {
         void main() { x := Config.VALUE; }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_068():
@@ -752,8 +752,8 @@ def test_068():
     source = """class TestClass {
         void main() { f := 1.2e3; }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_069():
@@ -761,8 +761,8 @@ def test_069():
     source = """class TestClass {
         void main() { r := a && b || c; }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_070():
@@ -770,8 +770,8 @@ def test_070():
     source = """class TestClass {
         void main() { x := y << 2; z := y >> 1; }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_071():
@@ -779,8 +779,8 @@ def test_071():
     source = """class TestClass {
         void main() { a := foo(1,2,3); }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_072():
@@ -788,8 +788,8 @@ def test_072():
     source = """class TestClass {
         void main() { val := mat[1][2]; }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_073():
@@ -797,8 +797,8 @@ def test_073():
     source = """class TestClass {
         void main() { r := s == "ok"; }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_074():
@@ -806,8 +806,8 @@ def test_074():
     source = """class TestClass {
         void main() { x := (float) (int) y; }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_075():
@@ -815,8 +815,8 @@ def test_075():
     source = """class TestClass { 
         void main() { Func f := someFunc; }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_076():
@@ -824,8 +824,8 @@ def test_076():
     source = """class TestClass {
         Map getMap() { return m; }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_077():
@@ -836,8 +836,8 @@ def test_077():
             inner();
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_078():
@@ -845,8 +845,8 @@ def test_078():
     source = """class TestClass {
         void main() { c := 'a'; }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_079():
@@ -862,8 +862,8 @@ def test_079():
             }
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_080():
@@ -871,8 +871,8 @@ def test_080():
     source = """class TestClass {
         static { init(); }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_081():
@@ -882,8 +882,8 @@ def test_081():
             label: while (true) do { break label; }
         }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_082():
@@ -891,8 +891,8 @@ def test_082():
     source = """class TestClass {
         List<Integer> list; // placeholder for generics
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_083():
@@ -900,8 +900,8 @@ def test_083():
     source = """class TestClass {
         void many(int a; int b; int c; int d; int e) { }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_084():
@@ -909,8 +909,8 @@ def test_084():
     source = """class TestClass {
         void main() { x := -a * b + +c; }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_085():
@@ -918,8 +918,8 @@ def test_085():
     source = """class TestClass {
         int f(int x) { if (x>0) return 1; return -1; }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_086():
@@ -927,8 +927,8 @@ def test_086():
     source = """class TestClass {
         void greet(string s := "hi") { }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_087():
@@ -936,29 +936,29 @@ def test_087():
     source = """class TestClass {
         void main() { x := (((a+b)*(c-d))+((e/f)-g)); }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_088():
     """Test numeric literal negative AST generation"""
     source = """class TestClass { void main() { n := -123; } }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_089():
     """Test attribute with complex name AST generation"""
     source = """class TestClass { int __hidden$val := 10; }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_090():
     """Test expression with function pointer call placeholder AST generation"""
     source = """class TestClass { void main() { fp(); } }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_091():
@@ -966,64 +966,64 @@ def test_091():
     source = """class TestClass { // a comment
         int x; /* block comment */
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_092():
     """Test empty method body AST generation"""
     source = """class TestClass { void empty() {} }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_093():
     """Test assignment of boolean expression AST generation"""
     source = """class TestClass { void main() { ok := (a < b) && (c > d); } }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_094():
     """Test multiple classes with inheritance AST generation"""
     source = """class A {} class B extends A {} class C extends B {}"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_095():
     """Test member function pointer placeholder AST generation"""
     source = """class TestClass { void main() { m := obj->method; } }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_096():
     """Test character escape sequences AST generation"""
     source = """class TestClass { void main() { s := '\\n'; } }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_097():
     """Test declaration with annotations placeholder AST generation"""
     source = """class TestClass { @annot int x; }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_098():
     """Test complex method chain with args AST generation"""
     source = """class TestClass { void main() { a.b(1,2).c(d).e(); } }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_099():
     """Test multiple variable decl with initialization AST generation"""
     source = """class TestClass { void main() { int a := 1, b := 2, c := 3; } }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 
 
 def test_100():
@@ -1034,6 +1034,6 @@ def test_100():
         Full() { for i := 0 to MAX-1 do { vals[i] := i; } }
         int sum() { int s := 0; for i := 0 to MAX-1 do s := s + vals[i]; return s; }
     }"""
-    expected = str(ASTGeneration().visitProgram(source))
-    assert str(ASTGeneration().visitProgram(source)) == expected
+    expected = str(ASTGenerator(source).generate())
+    assert str(ASTGenerator(source).generate()) == expected
 

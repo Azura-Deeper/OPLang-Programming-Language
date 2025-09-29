@@ -420,8 +420,7 @@ class ASTGeneration(OPLangVisitor):
             if ids and isinstance(ids, list) and len(ids) >= 2:
                 receiver = self._text(ids, 0)
                 method_name = self._text(ids, 1)
-                postfix_expr = PostfixExpression(Identifier(receiver), [MethodCall(method_name, args)])
-                return MethodInvocation(postfix_expr)
+                return StaticMethodInvocation(receiver, method_name, args)
             if ctx.THIS() and ctx.ID():
                 method_name = self._text(ctx.ID())
                 postfix_expr = PostfixExpression(ThisExpression(), [MethodCall(method_name, args)])
