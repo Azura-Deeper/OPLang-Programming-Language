@@ -420,7 +420,15 @@ class ASTGeneration(OPLangVisitor):
             if ids and isinstance(ids, list) and len(ids) >= 2:
                 receiver = self._text(ids, 0)
                 method_name = self._text(ids, 1)
-                return StaticMethodInvocation(receiver, method_name, args)
+                # Create StaticMethodInvocation manually to avoid constructor issue
+                static_invocation = StaticMethodInvocation.__new__(StaticMethodInvocation)
+                Expr.__init__(static_invocation)
+                static_invocation.class_name = receiver
+                static_invocation.method_name = method_name
+                static_invocation.args = args
+                # Add postfix_expr attribute to satisfy the parent class interface
+                static_invocation.postfix_expr = None
+                return static_invocation
             if ctx.THIS() and ctx.ID():
                 method_name = self._text(ctx.ID())
                 postfix_expr = PostfixExpression(ThisExpression(), [MethodCall(method_name, args)])
@@ -605,12 +613,12 @@ class ASTGeneration(OPLangVisitor):
         body = None
         try:
             if ctx.body() is not None:
-                body = self.visit(ctx.body())
+                body = self.visitBody(ctx.body())
             elif ctx.stmt() is not None:
                 body = self.visit(ctx.stmt())
         except Exception:
             try:
-                body = self.visit(ctx.body())
+                body = self.visitBody(ctx.body())
             except Exception:
                 try:
                     body = self.visit(ctx.stmt())
