@@ -47,6 +47,8 @@ stmt: varDecl
     | ifStmt
     | forStmt
     | returnStmt SEMI
+    | BREAK SEMI
+    | CONTINUE SEMI
     | exprStmt SEMI
     | body
     ;

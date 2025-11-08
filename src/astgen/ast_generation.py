@@ -316,6 +316,10 @@ class ASTGeneration(OPLangVisitor):
                     result = self.visitForStmt(stmt.forStmt())
                 elif stmt.returnStmt():
                     result = self.visitReturnStmt(stmt.returnStmt())
+                elif stmt.BREAK():
+                    result = BreakStatement()
+                elif stmt.CONTINUE():
+                    result = ContinueStatement()
                 elif stmt.exprStmt():
                     result = self.visitExprStmt(stmt.exprStmt())
                 elif stmt.body():
@@ -377,6 +381,10 @@ class ASTGeneration(OPLangVisitor):
             return self.visit(ctx.forStmt())
         elif ctx.returnStmt():
             return self.visit(ctx.returnStmt())
+        elif ctx.BREAK():
+            return BreakStatement()
+        elif ctx.CONTINUE():
+            return ContinueStatement()
         elif ctx.exprStmt():
             return self.visit(ctx.exprStmt())
         elif ctx.body():
